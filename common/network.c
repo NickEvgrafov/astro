@@ -34,6 +34,24 @@ void set_reuse_addr_opt(int sockfd)
 }
 
 //-----------------------------------------------------------------------------//
+void bind_server_socket(int sockfd, uint16_t port)
+{
+    struct sockaddr_in inaddr;
+    bzero(&inaddr, sizeof(inaddr));
+    inaddr.sin_family = AF_INET;
+    inaddr.sin_port = htons(port);
+    inaddr.sin_addr.s_addr = INADDR_ANY;
+    int binded = bind(sockfd, (const struct sockaddr *)&inaddr,
+                      sizeof(inaddr));
+    if (binded == -1)
+    {
+        fprintf(stderr, "bind() : %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+//-----------------------------------------------------------------------------//
 void listen_tcp_socket(int sockfd)
 {
     int listened = listen(sockfd, SOMAXCONN);
@@ -50,13 +68,13 @@ int accept_client_connection(
     struct sockaddr_in* clientInAddr)
 {
     socklen_t clientInAddrLen = sizeof(*clientInAddr);
-    bzero(&clientInAddr, sizeof(struct sockaddr_in));
+    bzero(clientInAddr, sizeof(struct sockaddr_in));
 
     int slaveSocket = -1;
     while (slaveSocket == -1)
     {
 
-        slaveSocket = accept(masterSockFd, (struct sockaddr *)(&clientInAddr),
+        slaveSocket = accept(masterSockFd, (struct sockaddr *)(clientInAddr),
                              &clientInAddrLen);
         
         if (slaveSocket == -1 && errno != EINTR)
